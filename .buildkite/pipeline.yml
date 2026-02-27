@@ -1,0 +1,30 @@
+---
+steps:
+  - label: ":debian: Build PostgreSQL 16 TopN Package"
+    key: build-pg16
+    command: ".buildkite/build.sh"
+    artifact_paths:
+      - "build-jammy/*.deb"
+
+  - label: ":debian: Publish TopN deb"
+    depends_on: build-pg16
+    command:
+      - >
+        aptly-upload
+        --aptly-url https://apt-repo.kx.gd
+        --retries 3
+        --repo kx-builds-jammy
+        --series jammy
+        build-jammy/*.deb
+    retry:
+      automatic: true
+    plugins:
+      artifacts#v1.2.0:
+        download: "build-jammy/*.deb"
+      docker#v1.4.0:
+        image: "${ECR}/ci-tools:cds-ci-tools-upgrade.latest"
+        always-pull: true
+        workdir: /src
+        environment:
+          - APTLY_UNAME
+          - APTLY_PASSWD

@@ -1,0 +1,192 @@
+# PostgreSQL TopN Extension - Debian Package
+
+This directory contains scripts and files for building Debian packages of the PostgreSQL TopN extension.
+
+## Quick Start
+
+### Prerequisites
+
+1. Install fpm (FPM - Effing Package Management):
+   ```bash
+   # On Debian/Ubuntu:
+   sudo apt-get install ruby-dev build-essential
+   sudo gem install fpm
+   
+   # On macOS with Homebrew:
+   brew install gnu-tar
+   gem install fpm
+   ```
+
+2. Install PostgreSQL development files:
+   ```bash
+   # On Debian/Ubuntu:
+   sudo apt-get install postgresql-server-dev-all
+   
+   # Or for specific versions:
+   sudo apt-get install postgresql-server-dev-14
+   sudo apt-get install postgresql-server-dev-15
+   sudo apt-get install postgresql-server-dev-16
+   ```
+
+## Building Packages
+
+### Method 1: Simple Build Script (Recommended for Quick Builds)
+
+Use this if you want to build a package for your current PostgreSQL installation:
+
+```bash
+./build_simple_deb.sh
+```
+
+This will:
+- Detect your PostgreSQL version automatically
+- Build the TopN extension
+- Create a .deb package in the `build/` directory
+
+### Method 2: Multi-Version Build Script
+
+Use this to build packages for multiple PostgreSQL versions:
+
+```bash
+# Build for all detected PostgreSQL versions
+./build_deb_fpm.sh
+
+# Or specify versions explicitly
+./build_deb_fpm.sh 14 15 16
+```
+
+### Method 3: Using Make
+
+```bash
+# Build for default versions (14, 15, 16)
+make -f Makefile.debian
+
+# Build for specific versions
+make -f Makefile.debian PG_VERSIONS="15 16"
+
+# Build for a single version
+make -f Makefile.debian deb-single PG_VERSION=16
+
+# Clean build artifacts
+make -f Makefile.debian clean
+```
+
+## Package Structure
+
+The generated Debian packages follow this naming convention:
+```
+postgresql-{PG_VERSION}-topn_{VERSION}-{ITERATION}_{ARCHITECTURE}.deb
+```
+
+Example: `postgresql-16-topn_2.7.0-1_amd64.deb`
+
+## Installation
+
+After building, install the package using dpkg:
+
+```bash
+sudo dpkg -i build/postgresql-16-topn_2.7.0-1_amd64.deb
+```
+
+If you encounter dependency issues:
+```bash
+sudo apt-get install -f
+```
+
+Or use apt to handle dependencies automatically:
+```bash
+sudo apt install ./build/postgresql-16-topn_2.7.0-1_amd64.deb
+```
+
+## Usage
+
+After installation, connect to your PostgreSQL database and create the extension:
+
+```sql
+CREATE EXTENSION topn;
+
+-- Verify installation
+SELECT * FROM pg_available_extensions WHERE name = 'topn';
+
+-- Check version
+SELECT extversion FROM pg_extension WHERE extname = 'topn';
+```
+
+## Uninstallation
+
+First, drop the extension from all databases where it's used:
+
+```sql
+DROP EXTENSION topn;
+```
+
+Then remove the package:
+
+```bash
+sudo apt-get remove postgresql-16-topn
+```
+
+## Package Contents
+
+Each package includes:
+- `topn.so` - The compiled extension library
+- `topn.control` - Extension control file
+- `topn--*.sql` - SQL scripts for creating and upgrading the extension
+- Post-installation and pre-removal scripts
+
+## Troubleshooting
+
+### FPM Not Found
+If fpm is not installed, the simple build script will fall back to using dpkg-deb directly.
+
+### PostgreSQL Version Detection Failed
+Ensure pg_config is in your PATH:
+```bash
+export PATH=/usr/lib/postgresql/16/bin:$PATH
+```
+
+### Build Fails
+Check that you have the PostgreSQL development headers:
+```bash
+# For Ubuntu/Debian
+sudo apt-get install postgresql-server-dev-16
+
+# For RHEL/CentOS
+sudo yum install postgresql16-devel
+```
+
+### Missing Dependencies
+The package depends on the corresponding PostgreSQL version. Ensure it's installed:
+```bash
+sudo apt-get install postgresql-16
+```
+
+## Repository Structure
+
+```
+debian/
+├── README.Debian           # This file
+├── postinst               # Post-installation script
+└── prerm                  # Pre-removal script
+
+Project root:
+├── build_simple_deb.sh    # Simple single-version builder
+├── build_deb_fpm.sh      # Multi-version builder with fpm
+├── build_deb.sh          # Basic build script
+└── Makefile.debian       # Make-based builder
+```
+
+## Support
+
+For issues related to the TopN extension itself:
+- https://github.com/citusdata/postgresql-topn
+
+For packaging issues:
+- Check the scripts in this repository
+- Ensure all dependencies are properly installed
+- Verify PostgreSQL is correctly configured
+
+## License
+
+The TopN extension is licensed under the Apache License 2.0.
+See the LICENSE file in the project root for details.

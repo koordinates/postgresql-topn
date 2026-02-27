@@ -1,0 +1,22 @@
+#!/bin/sh
+set -e
+
+# Pre-removal script for postgresql-topn
+
+case "$1" in
+    remove|upgrade|deconfigure)
+        # Nothing special needed
+        # Users should DROP EXTENSION topn before removing the package
+        echo "Removing postgresql-topn extension files..."
+        ;;
+
+    failed-upgrade)
+        ;;
+
+    *)
+        echo "prerm called with unknown argument \`$1'" >&2
+        exit 1
+        ;;
+esac
+
+exit 0

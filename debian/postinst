@@ -1,0 +1,23 @@
+#!/bin/sh
+set -e
+
+# Post-installation script for postgresql-topn
+
+case "$1" in
+    configure)
+        # Nothing special needed for topn extension
+        # The extension files are already in place
+        echo "postgresql-topn extension installed successfully."
+        echo "To use it, connect to your database and run: CREATE EXTENSION topn;"
+        ;;
+
+    abort-upgrade|abort-remove|abort-deconfigure)
+        ;;
+
+    *)
+        echo "postinst called with unknown argument \`$1'" >&2
+        exit 1
+        ;;
+esac
+
+exit 0
