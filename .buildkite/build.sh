@@ -92,12 +92,18 @@ ls -la build-jammy/*.deb
 
 echo "--- Signing debian package..."
 if [ -n "${APT_GPG_KEY-}" ]; then
+  # Sign packages using debsigs (available in ci-tools image)
   time docker run \
     -v "$(pwd):/src" \
     -e "GPG_KEY=${APT_GPG_KEY}" \
     -w "/src" \
+    --entrypoint /bin/bash \
     "${ECR}/ci-tools:cds-ci-tools-upgrade.latest" \
-      sign-debs "/src/build-jammy/*.deb"
+    -c "echo \"\${GPG_KEY}\" | base64 -d | gpg -q --import - && \
+        for deb in /src/build-jammy/*.deb; do \
+          echo \"Signing \$deb...\"; \
+          debsigs --sign=origin -k \$(gpg --list-secret-keys --with-colons | grep '^sec' | cut -d: -f5 | head -1) \$deb; \
+        done"
 else
   echo "No GPG key available, skipping signing"
 fi
