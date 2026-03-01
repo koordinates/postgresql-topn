@@ -64,6 +64,24 @@ time docker run \
 
 echo "--- Creating debian package..."
 
+# Detect architecture
+ARCH=$(dpkg --print-architecture 2>/dev/null || uname -m)
+# Normalize architecture name
+case "$ARCH" in
+  x86_64|amd64)
+    DEB_ARCH="amd64"
+    ;;
+  aarch64|arm64)
+    DEB_ARCH="arm64"
+    ;;
+  *)
+    echo "Unsupported architecture: $ARCH"
+    exit 1
+    ;;
+esac
+
+echo "Building package for architecture: $DEB_ARCH"
+
 # Create build directory
 mkdir -p build-jammy
 
@@ -77,7 +95,8 @@ time docker run \
     -n "postgresql-${PG_VERSION}-topn" \
     -v "${DEB_VERSION}" \
     -C "${STAGING_DIR}" \
-    -p "build-jammy/postgresql-${PG_VERSION}-topn_${DEB_VERSION}_amd64.deb" \
+    -p "build-jammy/postgresql-${PG_VERSION}-topn_${DEB_VERSION}_${DEB_ARCH}.deb" \
+    --architecture "${DEB_ARCH}" \
     --description "PostgreSQL TopN extension for approximate top-N queries" \
     --url "https://github.com/citusdata/postgresql-topn" \
     --maintainer "Koordinates CI Builder <support@koordinates.com>" \

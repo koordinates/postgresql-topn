@@ -1,10 +1,15 @@
 ---
 steps:
-  - label: ":debian: Build PostgreSQL 16 TopN Package"
+  - label: ":debian: Build PostgreSQL 16 TopN Package ({{matrix}})"
     key: build-pg16
     command: ".buildkite/build.sh"
     artifact_paths:
       - "build-jammy/*.deb"
+    matrix:
+      - "amd64"
+      - "arm64"
+    agents:
+      queue: "default_{{matrix}}"
 
   - label: ":debian: Publish TopN deb"
     depends_on: build-pg16
